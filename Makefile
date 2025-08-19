@@ -18,7 +18,7 @@ build_k$(1):
 		--target $(TARGET) \
 		--config config/multi_$(1).ini \
 		-Ikernel \
-		forward.cpp
+		kernel/forward.cpp
 
 	v++ -l \
 		-o build/k$(1)/forward.xclbin \
@@ -37,4 +37,5 @@ $(foreach K,$(KERNELS),$(eval $(call MAKE_KERNEL_RULE,$(K))))
 all: $(foreach K,$(KERNELS),build_k$(K))
 
 clean:
-	rm -rf build *.log *.jou *.html *.xml *.json *~
+	rm -rf build *.log *.jou *.html *.xml *.json *~ *.Xil *.ipcache *_x
+
