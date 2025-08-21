@@ -16,7 +16,6 @@ build_k$(1):
 		-o build/k$(1)/forward.xo \
 		--platform $(PFM) \
 		--target $(TARGET) \
-		--config config/multi_$(1).ini \
 		-Ikernel \
 		kernel/forward.cpp
 
@@ -25,7 +24,6 @@ build_k$(1):
 		build/k$(1)/forward.xo \
 		--platform $(PFM) \
 		--target $(TARGET) \
-		--config config/multi_$(1).ini
 endef
 
 
@@ -38,4 +36,5 @@ all: $(foreach K,$(KERNELS),build_k$(K))
 
 clean:
 	rm -rf build *.log *.jou *.html *.xml *.json *~ *.Xil *.ipcache *_x
+
 
