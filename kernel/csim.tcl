@@ -3,6 +3,8 @@ open_project proj_forward
 set_top forward
 add_files forward.cpp
 add_files -tb testbench.cpp
+add_files -tb tokenizer.bin
+add_files -tb model.bin
 
 open_solution "sol1"
 set_part {xcu250-figd2104-2L-e}
@@ -13,3 +15,4 @@ csim_design    ;# C simulation
 #cosim_design   ;# C/RTL co-simulation
 #export_design -format xo
 exit
+
