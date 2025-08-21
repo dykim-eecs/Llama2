@@ -13,4 +13,3 @@ csim_design    ;# C simulation
 #cosim_design   ;# C/RTL co-simulation
 #export_design -format xo
 exit
-
