@@ -8,7 +8,7 @@ extern "C" void forward(Transformer<dim, hidden_dim, n_layers, n_heads, n_kv_hea
                         int pos, 
                         float key_cache[n_layers * seq_len * ((dim * n_kv_heads) / n_heads)], 
                         float value_cache[n_layers * seq_len * ((dim * n_kv_heads) / n_heads)], 
-                        float out[vocabsize]);  // Forward pass declaration
+                        float out[vocab_size]);  // Forward pass declaration
 
 template <int S>
 void dequantize(QuantizedTensor<S> *qx, float x[S], int GS) {  // Dequantize tensor
