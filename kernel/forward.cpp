@@ -2,148 +2,33 @@
 #include "config.h"
 #include <cstring>
 
-// RMS normalization
-template <int S>
-void rmsnorm(float o[S], float x[S], float weight[S]) {
-    constexpr auto array_size = S * sizeof(float);
-    float ss = 0.0f;
-    float x_buff[S];
-    float weight_buff[S];
-    float out_buff[S];
-#pragma HLS array_partition variable = x_buff type = cyclic factor = 128
-#pragma HLS array_partition variable = weight_buff type = cyclic factor = 64
-#pragma HLS array_partition variable = out_buff type = cyclic factor = 64
-    std::memcpy(x_buff, x, array_size);
-    std::memcpy(weight_buff, weight, array_size);
+#include "rmsnorm.h"
+#include "softmax.h"
+#include "matmul.h"
 
-sum_of_squares:
-    for (int j = 0; j < S; j++) {
-#pragma HLS PIPELINE
-#pragma HLS UNROLL factor = 128 skip_exit_check
-        float x_j = x_buff[j];
-        ss += x_j * x_j;
-    }
-    ss /= S;
-    ss += 1e-5f;
-    ss = 1.0f / sqrtf(ss);
-
-norm_and_scale:
-    for (int j = 0; j < S; j++) {
-#pragma HLS PIPELINE
-#pragma HLS UNROLL factor = 64
-        float weight_j = weight_buff[j];
-        float x_j = x_buff[j];
-        out_buff[j] = weight_j * (ss * x_j);
-    }
-    std::memcpy(o, out_buff, array_size);
-}
-
-// Softmax activation
-template <int MAXSIZE>
-void softmax(float *x, int size) {
-    float buffer[MAXSIZE];
-    float max_val = x[0];
-
-max:
-    for (int i = 1; i < size; i++) {
-#pragma HLS loop_tripcount min = 0 max = 257 avg = 129
-#pragma HLS PIPELINE
-        float x_i = x[i];
-        if (x_i > max_val) {
-            max_val = x_i;
-        }
-    }
-
-exp:
-    for (int i = 0; i < size; i++) {
-#pragma HLS loop_tripcount min = 0 max = 257 avg = 129
-#pragma HLS PIPELINE
-#pragma HLS UNROLL factor = 16
-        float x_i = expf(x[i] - max_val);
-        buffer[i] = x_i;
-    }
-    float sum = 0.0f;
-
-sum:
-    for (int i = 0; i < size; i++) {
-#pragma HLS loop_tripcount min = 0 max = 257 avg = 129
-        sum += buffer[i];
-    }
-    const float inv_sum = 1.0 / sum;
-
-norm:
-    for (int i = 0; i < size; i++) {
-#pragma HLS loop_tripcount min = 0 max = 257 avg = 129
-#pragma HLS PIPELINE
-#pragma HLS UNROLL factor = 16
-        x[i] = buffer[i] * inv_sum;
-    }
-}
-
-// Matrix multiplication (quantized)
-template <int N, int D>
-void matmul(float *xout, int8_t *xq, float *xs, int8_t *wq, float *ws) {
-    static int8_t x_buffer[N];
-    static float xs_buffer[N / GS];
-#pragma HLS ARRAY_PARTITION variable = x_buffer type = cyclic factor = 16
-#pragma HLS ARRAY_PARTITION variable = xs_buffer type = cyclic factor = 4
-
-x_buff:
-    for (int i = 0; i < N; i++) {
-#pragma HLS UNROLL factor = 16
-        x_buffer[i] = xq[i];
-    }
-
-xs_buff:
-    for (int j = 0; j <= N - GS; j += GS) {
-#pragma HLS UNROLL factor = 4
-        xs_buffer[j / GS] = xs[j / GS];
-    }
-    int i;
-    for (i = 0; i < D; i++) {
-#pragma HLS PIPELINE
-        float val = 0.0f;
-        int8_t w_buffer[N];
-        float ws_buffer[N / GS];
-#pragma HLS ARRAY_PARTITION variable = w_buffer type = cyclic factor = 32
-#pragma HLS ARRAY_PARTITION variable = ws_buffer type = cyclic factor = 32
-        const int in = i * N;
-
-    matmul1:
-        for (int j = 0; j < N; j++) {
-            w_buffer[j] = wq[j + in];
-        }
-
-    matmul2:
-        const int in_s = i * N / GS;
-        const int groups = N / GS;
-        for (int j = 0; j < groups; j++) {
-            ws_buffer[j] = ws[in_s + j];
-        }
-        int j;
-
-    matmul3:
-        for (j = 0; j <= N - GS; j += GS) {
-            int32_t ival = 0;
-
-        matmul4:
-            for (int k = 0; k < GS; k++) {
-                ival += ((int32_t)x_buffer[j + k]) * ((int32_t)w_buffer[j + k]);
-            }
-            val += ((float)ival) * ws_buffer[j / GS] * xs_buffer[j / GS];
-        }
-        xout[i] = val;
-    }
-}
-
+// Forward pass
 extern "C" void forward(Transformer<dim, hidden_dim, n_layers, n_heads, n_kv_heads, vocab_size, seq_len, GS> *transformer, 
                         int token, 
                         int pos, 
                         float key_cache[n_layers * seq_len * ((dim * n_kv_heads) / n_heads)], 
                         float value_cache[n_layers * seq_len * ((dim * n_kv_heads) / n_heads)], 
-                        float *out) {  // Forward pass
-#pragma HLS INTERFACE m_axi port = transformer offset = slave bundle = gmem0
-#pragma HLS INTERFACE m_axi port = out offset = slave bundle = gmem1
+                        float out[vocab_size]) {
+    enum {
+      KV_DIM          = (dim * n_kv_heads) / n_heads,
+      KV_CACHE_DEPTH  = n_layers * seq_len * KV_DIM,
+      OUT_DEPTH       = vocab_size
+    };
+    
+    #pragma HLS INTERFACE mode=m_axi port=transformer bundle=gmem0 offset=slave
+    #pragma HLS INTERFACE mode=s_axilite port=token
+    #pragma HLS INTERFACE mode=s_axilite port=pos
+
+    #pragma HLS INTERFACE m_axi port=key_cache  bundle=gmem1 offset=slave depth=KV_CACHE_DEPTH
+    #pragma HLS INTERFACE m_axi port=value_cache bundle=gmem2 offset=slave depth=KV_CACHE_DEPTH
+    #pragma HLS INTERFACE m_axi port=out        bundle=gmem3 offset=slave depth=OUT_DEPTH
+    #pragma HLS INTERFACE mode=s_axilite port=return
+    
+    
     auto w = &transformer->weights;
     constexpr int UNROLL_FACTOR = 16;
     static float x[config.dim];
