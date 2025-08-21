@@ -8,8 +8,9 @@ open_solution "sol1"
 set_part {xcu250-figd2104-2L-e}
 create_clock -period 3.3 -name default
 
-csim_design    ;# C simulation (테스트벤치 실행)
+csim_design    ;# C simulation
 #csynth_design  ;# HLS synthesis
-#cosim_design   ;# C/RTL co-simulation (옵션)
+#cosim_design   ;# C/RTL co-simulation
 #export_design -format xo
 exit
+
