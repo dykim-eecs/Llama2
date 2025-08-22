@@ -5,6 +5,7 @@ PLATFORM_REPO_PATH ?= /opt/xilinx/platforms
 PFM                := $(PLATFORM_REPO_PATH)/$(PLATFORM)/$(PLATFORM).xpfm
 KERNELS            := 1
 
+# kv260 : xck26-sfvc784-2LV-C
 
 # ==== Build rules via define + eval ====
 define MAKE_KERNEL_RULE
@@ -36,5 +37,6 @@ all: $(foreach K,$(KERNELS),build_k$(K))
 
 clean:
 	rm -rf build *.log *.jou *.html *.xml *.json *~ *.Xil *.ipcache *_x
+
 
 
