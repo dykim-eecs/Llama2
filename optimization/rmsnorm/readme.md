@@ -1,6 +1,5 @@
 ## Simulation & Testing Instructions
 
-<details>
 
 This project demonstrates an optimized RMSNorm operation using **Vitis HLS**. The simulation commands differ depending on the Vitis version. Please follow the instructions below according to your environment.
 
