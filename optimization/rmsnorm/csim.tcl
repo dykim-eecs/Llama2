@@ -16,8 +16,8 @@ open_project proj_rmsnorm
 if { $optimized } {
 
     puts ">> Using OPTIMIZED rmsnorm"
-    set_top rmsnorm
-    add_files optimized_rmsnorm.h
+    set_top rmsnorm_wrapper
+    add_files optimized_rmsnorm.cpp
     add_files -tb testbench.cpp -cflags "-DUSE_OPTIMIZED"
 
     open_solution "sol_optimized"
@@ -27,8 +27,8 @@ if { $optimized } {
 } else {
 
     puts ">> Using ORIGINAL rmsnorm"
-    set_top rmsnorm
-    add_files original_rmsnorm.h
+    set_top rmsnorm_wrapper
+    add_files original_rmsnorm.cpp
     add_files -tb testbench.cpp
 
     open_solution "sol_original"

@@ -1,0 +1,50 @@
+#include <cstring>
+#include <cmath>
+
+template <int S>
+void rmsnorm(float o[S], float x[S], float weight[S])
+{
+#pragma HLS INTERFACE m_axi port=x offset=slave bundle=gmem0 depth=768
+#pragma HLS INTERFACE m_axi port=o offset=slave bundle=gmem1 depth=768
+#pragma HLS INTERFACE m_axi port=weight offset=slave bundle=gmem2 depth=768
+    constexpr auto array_size = S * sizeof(float);
+    float ss = 0.0f;
+    float x_buff[S];
+    float weight_buff[S];
+    float out_buff[S];
+#pragma HLS array_partition variable = x_buff type = cyclic factor = 128
+#pragma HLS array_partition variable = weight_buff type = cyclic factor = 64
+#pragma HLS array_partition variable = out_buff type = cyclic factor = 64
+
+    std::memcpy(x_buff, x, array_size);
+    std::memcpy(weight_buff, weight, array_size);
+
+sum_of_squares:
+    for (int j = 0; j < S; j++)
+    {
+#pragma HLS PIPELINE
+#pragma HLS UNROLL factor = 128 skip_exit_check
+        float x_j = x_buff[j];
+        ss += x_j * x_j;
+    }
+    ss /= S;
+    ss += 1e-5f;
+    ss = 1.0f / sqrtf(ss);
+
+norm_and_scale:
+    for (int j = 0; j < S; j++)
+    {
+#pragma HLS PIPELINE
+#pragma HLS UNROLL factor = 64
+        float weight_j = weight_buff[j];
+        float x_j = x_buff[j];
+        out_buff[j] = weight_j * (ss * x_j);
+    }
+    
+    std::memcpy(o, out_buff, array_size);
+}
+
+extern "C" void rmsnorm_wrapper(float o_out[768], float x_in[768], float weight_in[768]) {
+    // Call the template function with the specific size.
+    rmsnorm<768>(o_out, x_in, weight_in);
+}
