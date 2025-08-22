@@ -4,6 +4,8 @@
 * Vitis, Vitis HLS 2022.2
 * Xilinx U250
 
+Test on  Vitis 2025 & kv260
+
 ### **Minimum Board Requirements for Running llama2.c**
 
 | **BRAM** | **DSP** | **FF**  | **LUT** | **URAM** |
