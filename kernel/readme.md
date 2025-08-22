@@ -1,7 +1,5 @@
 ## Simulation & Testing Instructions
 
-<details>
-<summary>Click to expand</summary>
 
 This project provides an example for running C-level simulation in **Vitis HLS**. The command to run simulation depends on the version of Vitis being used.
 
