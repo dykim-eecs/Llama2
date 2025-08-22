@@ -1,7 +1,7 @@
 # ==== User Config ====
 TARGET             ?= hw
 PLATFORM           ?= kv260_platform
-PLATFORM_REPO_PATH ?= /platform/kv260_platform
+PLATFORM_REPO_PATH ?= platform
 PFM                := $(PLATFORM_REPO_PATH)/$(PLATFORM)/$(PLATFORM).xpfm
 KERNELS            := 1
 
@@ -37,6 +37,7 @@ all: $(foreach K,$(KERNELS),build_k$(K))
 
 clean:
 	rm -rf build *.log *.jou *.html *.xml *.json *~ *.Xil *.ipcache *_x
+
 
 
 
