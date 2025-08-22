@@ -294,8 +294,8 @@ int main(int argc, char* argv[]) {
    
     std::cout << "Input: " << prompt << std::endl;
     std::cout << "Output: " << std::endl;
-    double total_kernel_time_ms = 0.0; // ÃÑ kernel ½Ã°£ (ms)
-    int generated_tokens = 0; // »ı¼ºµÈ ÅäÅ« ¼ö
+    double total_kernel_time_ms = 0.0; // ì´ kernel ì‹œê°„ (ms)
+    int generated_tokens = 0; // ìƒì„±ëœ í† í° ìˆ˜
     for (int pos = 0; pos < steps; pos++) {
         // Correctly set dynamic arguments (token is arg 1, pos is arg 2)
         krnl_forward.setArg(1, token);
@@ -307,8 +307,8 @@ int main(int argc, char* argv[]) {
         // Execute the kernel with profiling
         cl::Event kernel_event;
         q.enqueueTask(krnl_forward, NULL, &kernel_event);
-        kernel_event.wait(); // ´ë±â
-        // ½Ã°£ °è»ê (ns -> ms)
+        kernel_event.wait(); // ëŒ€ê¸°
+        // ì‹œê°„ ê³„ì‚° (ns -> ms)
         cl_ulong start_time = kernel_event.getProfilingInfo<CL_PROFILING_COMMAND_START>();
         cl_ulong end_time = kernel_event.getProfilingInfo<CL_PROFILING_COMMAND_END>();
         double kernel_time_ms = (end_time - start_time) / 1e6; // ns to ms
@@ -333,7 +333,7 @@ int main(int argc, char* argv[]) {
                 }
             }
             next = max_idx;
-            generated_tokens++; // »ı¼º ÅäÅ« Ä«¿îÆ®
+            generated_tokens++; // ìƒì„± í† í° ì¹´ìš´íŠ¸
         }
         // Decode and print the token
         char *piece = decode(&tokenizer, token, next);
@@ -343,7 +343,7 @@ int main(int argc, char* argv[]) {
         std::cout << piece << std::endl;
         token = next;
     }
-    // Token/s °è»ê ¹× Ãâ·Â
+    // Token/s ê³„ì‚° ë° ì¶œë ¥
     if (generated_tokens > 0) {
         double total_time_sec = total_kernel_time_ms / 1000.0;
         double tokens_per_sec = generated_tokens / total_time_sec;
