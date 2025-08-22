@@ -33,9 +33,6 @@ void normalize_and_scale_proc(hls::stream<float>& ss_stream, hls::stream<float>&
 
 template <int S>
 void rmsnorm(float o[S], float x[S], float weight[S]) {
-#pragma HLS INTERFACE m_axi port=x offset=slave bundle=gmem0 depth=768
-#pragma HLS INTERFACE m_axi port=o offset=slave bundle=gmem1 depth=768
-#pragma HLS INTERFACE m_axi port=weight offset=slave bundle=gmem2 depth=768
 #pragma HLS dataflow
 
     // Stream for transferring input values from sum_of_squares_proc to normalize_and_scale_proc.
@@ -54,6 +51,10 @@ void rmsnorm(float o[S], float x[S], float weight[S]) {
 }
 
 extern "C" void rmsnorm_wrapper(float o_out[768], float x_in[768], float weight_in[768]) {
+#pragma HLS INTERFACE m_axi port=o_out offset=slave bundle=gmem0 depth=768
+#pragma HLS INTERFACE m_axi port=x_in offset=slave bundle=gmem1 depth=768
+#pragma HLS INTERFACE m_axi port=weight_in offset=slave bundle=gmem2 depth=768
+    
     // Call the template function with the specific size.
     rmsnorm<768>(o_out, x_in, weight_in);
 }
