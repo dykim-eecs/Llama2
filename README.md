@@ -36,9 +36,6 @@ In contrast, **llama2.c** is a lightweight C implementation created by Karpathy 
 | Format      | PyTorch checkpoint, Hugging Face Hub | `.bin` (custom header, quantization support) |
 | Environment | GPU/TPU (high-performance)           | CPU, FPGA, embedded systems                  |
 
-## **Architecture**
-
-![image.png](attachment\:d5ad4a90-4dd0-4770-9249-c84d7bfd3c8a\:image.png)
 
 **Dataset Reference:**
 
