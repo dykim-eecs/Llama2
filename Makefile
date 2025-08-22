@@ -1,7 +1,7 @@
 # ==== User Config ====
 TARGET             ?= hw
-PLATFORM           ?= xilinx_u250_gen3x16_xdma_4_1_202210_1
-PLATFORM_REPO_PATH ?= /opt/xilinx/platforms
+PLATFORM           ?= kv260_platform
+PLATFORM_REPO_PATH ?= /platform/kv260_platform
 PFM                := $(PLATFORM_REPO_PATH)/$(PLATFORM)/$(PLATFORM).xpfm
 KERNELS            := 1
 
@@ -24,7 +24,7 @@ build_k$(1):
 		-o build/k$(1)/forward.xclbin \
 		build/k$(1)/forward.xo \
 		--platform $(PFM) \
-		--target $(TARGET) \
+		--target $(TARGET)
 endef
 
 
@@ -37,6 +37,7 @@ all: $(foreach K,$(KERNELS),build_k$(K))
 
 clean:
 	rm -rf build *.log *.jou *.html *.xml *.json *~ *.Xil *.ipcache *_x
+
 
 
 
