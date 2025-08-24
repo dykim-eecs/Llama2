@@ -21,7 +21,6 @@ xs_buff:
     }
     int i;
     for (i = 0; i < D; i++) {
-#pragma HLS PIPELINE
         float val = 0.0f;
         int8_t w_buffer[N];
         float ws_buffer[N / GS];
